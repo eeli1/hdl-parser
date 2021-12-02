@@ -30,6 +30,20 @@ impl Chip {
             parts,
         }
     }
+
+    pub fn new_string(
+        name: String,
+        inputs: Vec<String>,
+        outputs: Vec<String>,
+        parts: Vec<Component>,
+    ) -> Self {
+        Self {
+            name,
+            inputs,
+            outputs,
+            parts,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -59,24 +73,23 @@ impl LookupTable {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Component {
-    inputs: Vec<(String, String)>,
-    outputs: Vec<(String, String)>,
+    var_map: Vec<(String, String)>,
     chip_name: String,
 }
 
 impl Component {
-    pub fn new(inputs: Vec<(&str, &str)>, outputs: Vec<(&str, &str)>, chip_name: &str) -> Self {
+    pub fn new(var_map: Vec<(&str, &str)>, chip_name: &str) -> Self {
         Self {
-            inputs: inputs
-                .iter()
-                .map(|&(s1, s2)| -> (String, String) { (s1.to_string(), s2.to_string()) })
-                .collect(),
-            outputs: outputs
+            var_map: var_map
                 .iter()
                 .map(|&(s1, s2)| -> (String, String) { (s1.to_string(), s2.to_string()) })
                 .collect(),
             chip_name: chip_name.to_string(),
         }
+    }
+
+    pub fn new_string(var_map: Vec<(String, String)>, chip_name: String) -> Self {
+        Self { var_map, chip_name }
     }
 }
 
