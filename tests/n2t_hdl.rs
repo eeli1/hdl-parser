@@ -1,6 +1,7 @@
 use hdl_parser::{n2t_hdl, Chip, Component};
 
 #[test]
+#[ignore = "not implemented"]
 fn and() {
     let code = r#"
     CHIP And {
