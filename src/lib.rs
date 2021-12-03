@@ -1,3 +1,5 @@
+use std::fmt::{Debug, Display};
+
 pub mod n2t_hdl;
 
 #[derive(Debug, Clone, PartialEq, Copy)]
@@ -93,5 +95,47 @@ impl Component {
     }
 }
 
+pub trait Token: Clone {
+    type TokenType: PartialEq + Debug;
+    fn line(&self) -> usize;
+    fn index(&self) -> usize;
+    fn len(&self) -> usize;
+    fn token_type(&self) -> Self::TokenType;
+}
+
 #[derive(Debug, Clone, PartialEq)]
-pub struct Error {}
+pub struct Error {
+    line: Option<usize>,
+    index: Option<usize>,
+    len: Option<usize>,
+    msg: String,
+}
+
+impl Error {
+    pub fn expect<T: Token>(got: Option<&T>, expected: T::TokenType) -> Result<T::TokenType, Self> {
+        if let Some(token) = got {
+            let token = token.clone();
+            if token.token_type() == expected {
+                Ok(token.token_type())
+            } else {
+                Err(Self {
+                    line: Some(token.line()),
+                    index: Some(token.index()),
+                    len: Some(token.len()),
+                    msg: format!(
+                        "unexpected token expected <{:?}> but got <{:?}>",
+                        expected,
+                        token.token_type()
+                    ),
+                })
+            }
+        } else {
+            Err(Self {
+                line: None,
+                index: None,
+                len: None,
+                msg: format!("unexpected end of file expected token <{:?}> ", expected),
+            })
+        }
+    }
+}
