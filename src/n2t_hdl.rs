@@ -22,8 +22,11 @@ pub fn parse(code: &str) -> Result<Vec<Chip>, Error> {
 
         Error::expect(t_iter.next(), TokenType::In)?;
         inputs = get_names(&mut t_iter)?;
+        Error::expect(t_iter.next(), TokenType::Semicolon)?;
+
         Error::expect(t_iter.next(), TokenType::Out)?;
         outputs = get_names(&mut t_iter)?;
+        Error::expect(t_iter.next(), TokenType::Semicolon)?;
 
         Error::expect(t_iter.next(), TokenType::Parts)?;
         Error::expect(t_iter.next(), TokenType::Colon)?;
@@ -39,6 +42,21 @@ pub fn parse(code: &str) -> Result<Vec<Chip>, Error> {
 }
 
 fn get_names(t_iter: &mut Peekable<Iter<Token>>) -> Result<Vec<String>, Error> {
+    let mut names = get_name(t_iter)?;
+    while let Some(&token) = t_iter.peek() {
+        if !token.eq_type(TokenType::Comma) {
+            break;
+        }
+        Error::expect(t_iter.next(), TokenType::Comma)?;
+        for name in get_name(t_iter)? {
+            names.push(name);
+        }
+    }
+
+    Ok(names)
+}
+
+fn get_name(t_iter: &mut Peekable<Iter<Token>>) -> Result<Vec<String>, Error> {
     let identifier = get_identifier(t_iter.next())?;
     if let Some(&token) = t_iter.peek() {
         if !token.eq_type(TokenType::OpenB) {
@@ -47,7 +65,7 @@ fn get_names(t_iter: &mut Peekable<Iter<Token>>) -> Result<Vec<String>, Error> {
         Error::expect(t_iter.next(), TokenType::OpenB)?;
         let start = get_num(t_iter.next())?;
         Error::expect(t_iter.next(), TokenType::DoubleDot)?;
-        let end = get_num(t_iter.next())?;
+        let end = get_num(t_iter.next())? + 1;
         Error::expect(t_iter.next(), TokenType::CloseB)?;
         let mut result = Vec::new();
         for i in start..end {
@@ -84,7 +102,6 @@ fn get_parts(t_iter: &mut Peekable<Iter<Token>>) -> Result<Vec<Component>, Error
         if !token.eq_type(TokenType::Identifier(String::new())) {
             break;
         }
-        t_iter.next();
         parts.push(get_component(t_iter)?);
     }
 
@@ -114,9 +131,9 @@ fn get_component(t_iter: &mut Peekable<Iter<Token>>) -> Result<Component, Error>
 }
 
 fn get_eq(t_iter: &mut Peekable<Iter<Token>>) -> Result<Vec<(String, String)>, Error> {
-    let first = get_names(t_iter)?;
+    let first = get_name(t_iter)?;
     Error::expect(t_iter.next(), TokenType::Equals)?;
-    let second = get_names(t_iter)?;
+    let second = get_name(t_iter)?;
 
     if first.len() != second.len() {
         todo!();
@@ -154,7 +171,7 @@ fn tokenize(code: &str) -> Vec<Token> {
     tokens
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 struct Token {
     index: usize,
     line: usize,
@@ -225,13 +242,13 @@ enum TokenType {
     Ignore(Option<String>),
 
     #[regex(r"[a-zA-Z_$][a-zA-Z_$0-9]+", |lex| lex.slice().parse())]
+    #[regex(r"[a-zA-Z]", |lex| lex.slice().parse())]
     Identifier(String),
 
     #[regex(r"[0-9]+", |lex| lex.slice().parse())]
     Number(usize),
 
     #[error]
-    #[regex(r"![a-zA-Z_$0-9]")]
     Unknown,
 }
 
@@ -278,9 +295,66 @@ fn ignore(lex: &mut Lexer<TokenType>) -> Option<Option<String>> {
 }
 
 mod test {
-    use super::*;
+    use super::{Component, Token, TokenType};
+
     #[test]
-    fn test_get_name() {
-        unimplemented!();
+    fn tokneize() {
+        let code = " hello, world..";
+        let tokens = super::tokenize(code);
+        assert_eq!(
+            tokens,
+            vec![
+                Token {
+                    index: 1,
+                    line: 0,
+                    len: 5,
+                    token_type: TokenType::Identifier("hello".to_string())
+                },
+                Token {
+                    index: 6,
+                    line: 0,
+                    len: 1,
+                    token_type: TokenType::Comma
+                },
+                Token {
+                    index: 8,
+                    line: 0,
+                    len: 5,
+                    token_type: TokenType::Identifier("world".to_string())
+                },
+                Token {
+                    index: 13,
+                    line: 0,
+                    len: 2,
+                    token_type: TokenType::DoubleDot,
+                }
+            ]
+        )
+    }
+
+    #[test]
+    fn get_name() {
+        let code = " hello in[2..4]";
+        let tokens = super::tokenize(code);
+        let mut t_iter = tokens.iter().peekable();
+
+        let name = super::get_names(&mut t_iter).unwrap();
+        assert_eq!(name, vec!["hello"]);
+
+        let name = super::get_names(&mut t_iter).unwrap();
+        assert_eq!(name, vec!["in2", "in3", "in4"]);
+    }
+
+    #[test]
+    fn get_component() {
+        let code = "Nand(a=a, b=b, out=nand);";
+        let tokens = super::tokenize(code);
+        let mut t_iter = tokens.iter().peekable();
+
+        let component = super::get_component(&mut t_iter).unwrap();
+        assert_eq!(
+            component,
+            Component::new(vec![("a", "a"), ("b", "b"), ("out", "nand")], "Nand")
+        );
     }
 }
