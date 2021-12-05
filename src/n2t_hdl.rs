@@ -41,57 +41,7 @@ pub fn parse(code: &str) -> Result<Vec<Chip>, Error> {
     Ok(chips)
 }
 
-fn get_names(t_iter: &mut Peekable<Iter<Token>>) -> Result<Vec<String>, Error> {
-    let mut names = get_name(t_iter)?;
-    while let Some(&token) = t_iter.peek() {
-        if !token.eq_type(TokenType::Comma) {
-            break;
-        }
-        Error::expect(t_iter.next(), TokenType::Comma)?;
-        for name in get_name(t_iter)? {
-            names.push(name);
-        }
-    }
-
-    Ok(names)
-}
-
-fn get_name(t_iter: &mut Peekable<Iter<Token>>) -> Result<Vec<String>, Error> {
-    let identifier = get_identifier(t_iter.next())?;
-    if let Some(&token) = t_iter.peek() {
-        if !token.eq_type(TokenType::OpenB) {
-            return Ok(vec![identifier]);
-        }
-        Error::expect(t_iter.next(), TokenType::OpenB)?;
-        let start = get_num(t_iter.next())?;
-        Error::expect(t_iter.next(), TokenType::DoubleDot)?;
-        let end = get_num(t_iter.next())? + 1;
-        Error::expect(t_iter.next(), TokenType::CloseB)?;
-        let mut result = Vec::new();
-        for i in start..end {
-            result.push(format!("{}{}", identifier, i));
-        }
-        return Ok(result);
-    }
-    Ok(vec![identifier])
-}
-
-fn get_num(token: Option<&Token>) -> Result<usize, Error> {
-    if let TokenType::Number(num) = Error::expect(token, TokenType::Number(0))? {
-        return Ok(num);
-    } else {
-        unreachable!();
-    }
-}
-
-fn get_identifier(token: Option<&Token>) -> Result<String, Error> {
-    let token = Error::expect(token, TokenType::Identifier(String::new()))?;
-    if let TokenType::Identifier(name) = token {
-        return Ok(name);
-    } else {
-        unreachable!();
-    }
-}
+// --------------------------------- components ---------------------------------
 
 fn get_parts(t_iter: &mut Peekable<Iter<Token>>) -> Result<Vec<Component>, Error> {
     let mut parts = Vec::new();
@@ -145,6 +95,62 @@ fn get_eq(t_iter: &mut Peekable<Iter<Token>>) -> Result<Vec<(String, String)>, E
     }
     Ok(var_map)
 }
+
+// --------------------------------- utils ---------------------------------
+
+fn get_names(t_iter: &mut Peekable<Iter<Token>>) -> Result<Vec<String>, Error> {
+    let mut names = get_name(t_iter)?;
+    while let Some(&token) = t_iter.peek() {
+        if !token.eq_type(TokenType::Comma) {
+            break;
+        }
+        Error::expect(t_iter.next(), TokenType::Comma)?;
+        for name in get_name(t_iter)? {
+            names.push(name);
+        }
+    }
+
+    Ok(names)
+}
+
+fn get_name(t_iter: &mut Peekable<Iter<Token>>) -> Result<Vec<String>, Error> {
+    let identifier = get_identifier(t_iter.next())?;
+    if let Some(&token) = t_iter.peek() {
+        if !token.eq_type(TokenType::OpenB) {
+            return Ok(vec![identifier]);
+        }
+        Error::expect(t_iter.next(), TokenType::OpenB)?;
+        let start = get_num(t_iter.next())?;
+        Error::expect(t_iter.next(), TokenType::DoubleDot)?;
+        let end = get_num(t_iter.next())? + 1;
+        Error::expect(t_iter.next(), TokenType::CloseB)?;
+        let mut result = Vec::new();
+        for i in start..end {
+            result.push(format!("{}{}", identifier, i));
+        }
+        return Ok(result);
+    }
+    Ok(vec![identifier])
+}
+
+fn get_num(token: Option<&Token>) -> Result<usize, Error> {
+    if let TokenType::Number(num) = Error::expect(token, TokenType::Number(0))? {
+        return Ok(num);
+    } else {
+        unreachable!();
+    }
+}
+
+fn get_identifier(token: Option<&Token>) -> Result<String, Error> {
+    let token = Error::expect(token, TokenType::Identifier(String::new()))?;
+    if let TokenType::Identifier(name) = token {
+        return Ok(name);
+    } else {
+        unreachable!();
+    }
+}
+
+// ------------------------------- tokens ------------------------------------------------
 
 fn tokenize(code: &str) -> Vec<Token> {
     let mut tokens = Vec::new();
@@ -294,6 +300,7 @@ fn ignore(lex: &mut Lexer<TokenType>) -> Option<Option<String>> {
     }
 }
 
+#[cfg(test)]
 mod test {
     use super::{Component, Token, TokenType};
 

@@ -1,13 +1,8 @@
 use std::fmt::Debug;
 
 pub mod n2t_hdl;
-
-#[derive(Debug, Clone, PartialEq, Copy)]
-pub enum Bit {
-    One,
-    Zero,
-    X,
-}
+pub mod open_gal;
+pub mod sim;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Chip {
@@ -52,22 +47,19 @@ impl Chip {
 pub struct LookupTable {
     name: String,
     inputs: Vec<String>,
-    outputs: Vec<String>,
-    table: Vec<Vec<Bit>>,
+    output: String,
+    table: Vec<bool>,
 }
 
 impl LookupTable {
-    pub fn new(name: &str, inputs: Vec<&str>, outputs: Vec<&str>, table: Vec<Vec<Bit>>) -> Self {
+    pub fn new(name: &str, inputs: Vec<&str>, output: &str, table: Vec<bool>) -> Self {
         Self {
             name: name.to_string(),
             inputs: inputs
                 .iter()
                 .map(|&s| -> String { s.to_string() })
                 .collect(),
-            outputs: outputs
-                .iter()
-                .map(|&s| -> String { s.to_string() })
-                .collect(),
+            output: output.to_string(),
             table,
         }
     }
@@ -136,6 +128,33 @@ impl Error {
                 len: None,
                 msg: format!("unexpected end of file expected token <{:?}> ", expected),
             })
+        }
+    }
+
+    pub fn msg_token<T: Token>(msg: &str, token: T) -> Self {
+        Self {
+            line: Some(token.line()),
+            index: Some(token.index()),
+            len: Some(token.len()),
+            msg: msg.to_string(),
+        }
+    }
+
+    pub fn msg_len<T: Token>(msg: &str, token: T, len: usize) -> Self {
+        Self {
+            line: Some(token.line()),
+            index: Some(token.index()),
+            len: Some(len),
+            msg: msg.to_string(),
+        }
+    }
+
+    pub fn msg(msg: &str) -> Self {
+        Self {
+            line: None,
+            index: None,
+            len: None,
+            msg: msg.to_string(),
         }
     }
 }
