@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 pub mod n2t_hdl;
 pub mod open_gal;
-pub mod sim;
+pub mod shdl;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Chip {
@@ -47,19 +47,22 @@ impl Chip {
 pub struct LookupTable {
     name: String,
     inputs: Vec<String>,
-    output: String,
+    output: Vec<String>,
     table: Vec<bool>,
 }
 
 impl LookupTable {
-    pub fn new(name: &str, inputs: Vec<&str>, output: &str, table: Vec<bool>) -> Self {
+    pub fn new(name: &str, inputs: Vec<&str>, output: Vec<&str>, table: Vec<bool>) -> Self {
         Self {
             name: name.to_string(),
             inputs: inputs
                 .iter()
                 .map(|&s| -> String { s.to_string() })
                 .collect(),
-            output: output.to_string(),
+            output: output
+                .iter()
+                .map(|&s| -> String { s.to_string() })
+                .collect(),
             table,
         }
     }
