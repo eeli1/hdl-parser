@@ -1,19 +1,20 @@
 use std::fmt::Debug;
 
+pub mod comphdl;
 pub mod n2t_hdl;
 pub mod open_gal;
 pub mod shdl;
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Chip {
+pub struct Chip<T> {
     name: String,
     inputs: Vec<String>,
     outputs: Vec<String>,
-    parts: Vec<Component>,
+    parts: Vec<T>,
 }
 
-impl Chip {
-    pub fn new(name: &str, inputs: Vec<&str>, outputs: Vec<&str>, parts: Vec<Component>) -> Self {
+impl<T> Chip<T> {
+    pub fn new(name: &str, inputs: Vec<&str>, outputs: Vec<&str>, parts: Vec<T>) -> Self {
         Self {
             name: name.to_string(),
             inputs: inputs
@@ -32,7 +33,7 @@ impl Chip {
         name: String,
         inputs: Vec<String>,
         outputs: Vec<String>,
-        parts: Vec<Component>,
+        parts: Vec<T>,
     ) -> Self {
         Self {
             name,
@@ -87,6 +88,29 @@ impl Component {
 
     pub fn new_string(var_map: Vec<(String, String)>, chip_name: String) -> Self {
         Self { var_map, chip_name }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ComponentIO {
+    inputs: Vec<String>,
+    ouputs: Vec<String>,
+    chip_name: String,
+}
+
+impl ComponentIO {
+    pub fn new(inputs: Vec<&str>, ouputs: Vec<&str>, chip_name: &str) -> Self {
+        Self {
+            inputs: inputs
+                .iter()
+                .map(|&s| -> String { s.to_string() })
+                .collect(),
+            ouputs: ouputs
+                .iter()
+                .map(|&s| -> String { s.to_string() })
+                .collect(),
+            chip_name: chip_name.to_string(),
+        }
     }
 }
 

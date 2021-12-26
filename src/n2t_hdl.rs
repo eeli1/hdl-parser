@@ -3,7 +3,7 @@ use logos::{Lexer, Logos};
 use std::iter::Peekable;
 use std::slice::Iter;
 
-pub fn parse(code: &str) -> Result<Vec<Chip>, Error> {
+pub fn parse(code: &str) -> Result<Vec<Chip<Component>>, Error> {
     let tokens = tokenize(code);
     let mut t_iter = tokens.iter().peekable();
 
