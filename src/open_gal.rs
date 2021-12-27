@@ -1,12 +1,53 @@
-use crate::{Component, Error, LookupTable};
+use crate::{Error, LookupTable};
 use logos::{Lexer, Logos};
 use std::iter::Peekable;
 use std::slice::Iter;
 
+#[derive(Debug, Clone, PartialEq)]
 pub struct OGalParse {
     pin_map: Vec<(String, usize)>,
     lookup_table: Vec<LookupTable>,
     dff_enable: Vec<String>,
+}
+
+impl OGalParse {
+    pub fn lut(lookup_table: Vec<LookupTable>) -> Self {
+        Self {
+            lookup_table,
+            pin_map: Vec::new(),
+            dff_enable: Vec::new(),
+        }
+    }
+
+    pub fn new(
+        pin_map: Vec<(&str, usize)>,
+        lookup_table: Vec<LookupTable>,
+        dff_enable: Vec<&str>,
+    ) -> Self {
+        Self {
+            pin_map: pin_map
+                .iter()
+                .map(|&(s, i)| -> (String, usize) { (s.to_string(), i) })
+                .collect(),
+            lookup_table,
+            dff_enable: dff_enable
+                .iter()
+                .map(|&s| -> String { s.to_string() })
+                .collect(),
+        }
+    }
+
+    pub fn new_string(
+        pin_map: Vec<(String, usize)>,
+        lookup_table: Vec<LookupTable>,
+        dff_enable: Vec<String>,
+    ) -> Self {
+        Self {
+            pin_map,
+            lookup_table,
+            dff_enable,
+        }
+    }
 }
 
 pub fn parse(code: &str) -> Result<OGalParse, Error> {

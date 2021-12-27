@@ -1,9 +1,9 @@
-use crate::{Chip, Component, Error};
+use crate::{Chip, ComponentMap, Error};
 use logos::{Lexer, Logos};
 use std::iter::Peekable;
 use std::slice::Iter;
 
-pub fn parse(code: &str) -> Result<Vec<Chip<Component>>, Error> {
+pub fn parse(code: &str) -> Result<Vec<Chip<ComponentMap>>, Error> {
     let tokens = tokenize(code);
     let mut t_iter = tokens.iter().peekable();
 
@@ -43,7 +43,7 @@ pub fn parse(code: &str) -> Result<Vec<Chip<Component>>, Error> {
 
 // --------------------------------- components ---------------------------------
 
-fn get_parts(t_iter: &mut Peekable<Iter<Token>>) -> Result<Vec<Component>, Error> {
+fn get_parts(t_iter: &mut Peekable<Iter<Token>>) -> Result<Vec<ComponentMap>, Error> {
     let mut parts = Vec::new();
 
     parts.push(get_component(t_iter)?);
@@ -58,7 +58,7 @@ fn get_parts(t_iter: &mut Peekable<Iter<Token>>) -> Result<Vec<Component>, Error
     Ok(parts)
 }
 
-fn get_component(t_iter: &mut Peekable<Iter<Token>>) -> Result<Component, Error> {
+fn get_component(t_iter: &mut Peekable<Iter<Token>>) -> Result<ComponentMap, Error> {
     let chip_name = get_identifier(t_iter.next())?;
     Error::expect(t_iter.next(), TokenType::OpenP)?;
 
@@ -77,7 +77,7 @@ fn get_component(t_iter: &mut Peekable<Iter<Token>>) -> Result<Component, Error>
     Error::expect(token, TokenType::CloseP)?;
     Error::expect(t_iter.next(), TokenType::Semicolon)?;
 
-    Ok(Component::new_string(var_map, chip_name))
+    Ok(ComponentMap::new_string(var_map, chip_name))
 }
 
 fn get_eq(t_iter: &mut Peekable<Iter<Token>>) -> Result<Vec<(String, String)>, Error> {
@@ -302,7 +302,7 @@ fn ignore(lex: &mut Lexer<TokenType>) -> Option<Option<String>> {
 
 #[cfg(test)]
 mod test {
-    use super::{Component, Token, TokenType};
+    use super::{ComponentMap, Token, TokenType};
 
     #[test]
     fn tokneize() {
@@ -361,7 +361,7 @@ mod test {
         let component = super::get_component(&mut t_iter).unwrap();
         assert_eq!(
             component,
-            Component::new(vec![("a", "a"), ("b", "b"), ("out", "nand")], "Nand")
+            ComponentMap::new(vec![("a", "a"), ("b", "b"), ("out", "nand")], "Nand")
         );
     }
 }

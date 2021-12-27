@@ -49,11 +49,11 @@ pub struct LookupTable {
     name: String,
     inputs: Vec<String>,
     output: Vec<String>,
-    table: Vec<bool>,
+    table: Vec<Vec<bool>>,
 }
 
 impl LookupTable {
-    pub fn new(name: &str, inputs: Vec<&str>, output: Vec<&str>, table: Vec<bool>) -> Self {
+    pub fn new(name: &str, inputs: Vec<&str>, output: Vec<&str>, table: Vec<Vec<bool>>) -> Self {
         Self {
             name: name.to_string(),
             inputs: inputs
@@ -70,24 +70,24 @@ impl LookupTable {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Component {
+pub struct ComponentMap {
     var_map: Vec<(String, String)>,
-    chip_name: String,
+    name: String,
 }
 
-impl Component {
-    pub fn new(var_map: Vec<(&str, &str)>, chip_name: &str) -> Self {
+impl ComponentMap {
+    pub fn new(var_map: Vec<(&str, &str)>, name: &str) -> Self {
         Self {
             var_map: var_map
                 .iter()
                 .map(|&(s1, s2)| -> (String, String) { (s1.to_string(), s2.to_string()) })
                 .collect(),
-            chip_name: chip_name.to_string(),
+            name: name.to_string(),
         }
     }
 
-    pub fn new_string(var_map: Vec<(String, String)>, chip_name: String) -> Self {
-        Self { var_map, chip_name }
+    pub fn new_string(var_map: Vec<(String, String)>, name: String) -> Self {
+        Self { var_map, name }
     }
 }
 
@@ -95,11 +95,11 @@ impl Component {
 pub struct ComponentIO {
     inputs: Vec<String>,
     ouputs: Vec<String>,
-    chip_name: String,
+    name: String,
 }
 
 impl ComponentIO {
-    pub fn new(inputs: Vec<&str>, ouputs: Vec<&str>, chip_name: &str) -> Self {
+    pub fn new(inputs: Vec<&str>, ouputs: Vec<&str>, name: &str) -> Self {
         Self {
             inputs: inputs
                 .iter()
@@ -109,7 +109,31 @@ impl ComponentIO {
                 .iter()
                 .map(|&s| -> String { s.to_string() })
                 .collect(),
-            chip_name: chip_name.to_string(),
+            name: name.to_string(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Component {
+    inputs: Vec<(String, String)>,
+    ouputs: Vec<(String, String)>,
+    name: String,
+}
+
+impl Component {
+    pub fn new(inputs: Vec<(&str, &str)>, ouputs: Vec<(&str, &str)>, name: &str) -> Self {
+        Self {
+            inputs: inputs
+                .iter()
+                .map(|&(s1, s2)| -> (String, String) { (s1.to_string(), s2.to_string()) })
+                .collect(),
+
+            ouputs: ouputs
+                .iter()
+                .map(|&(s1, s2)| -> (String, String) { (s1.to_string(), s2.to_string()) })
+                .collect(),
+            name: name.to_string(),
         }
     }
 }
